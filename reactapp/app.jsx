@@ -3,7 +3,7 @@ function Application () {
         <div>
             <h1>Buenos dias</h1>
             <p> I was rendered from the application component</p>
-            </div>
+        </div>
     );
 }
 
