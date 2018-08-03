@@ -2,4 +2,7 @@
 
 html {background:#333; color:#fff;
     font-family: 'Sunflower', sans-serif;
+    margin:0.125em;
 }
+body {padding:2em;}
+a:link, a:visited, a:hover, a:active {color:white; text-decoration:none;}
