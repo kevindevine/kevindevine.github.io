@@ -1,8 +1,14 @@
 /* styles */
 
-html {background:#333; color:#fff;
-    font-family: 'Sunflower', sans-serif;
+html { color:#fff;
+    background-color:  #808285;
+    transition: background-color 1s cubic-bezier(0.7, 0, 0.3, 1);
+    font-size: 16px;
+    font-family: 'Sunflower', Helvetica, sans-serif;
     margin:0.125em;
+    -webkit-font-smoothing: antialiased;
 }
+
+
 body {padding:2em;}
 a:link, a:visited, a:hover, a:active {color:white; text-decoration:none;}
