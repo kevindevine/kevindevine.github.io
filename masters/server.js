@@ -19,6 +19,15 @@ function normalizeName(name) {
   return NAME_MAP[name] || name;
 }
 
+// Parse ESPN's score displayValue: "E" → 0, "-8" → -8, "+4" → 4
+function parseToParString(str) {
+  if (str == null) return null;
+  const s = String(str).trim().toUpperCase();
+  if (s === 'E' || s === 'EVEN') return 0;
+  const n = parseFloat(s.replace('+', ''));
+  return isNaN(n) ? null : n;
+}
+
 function parseCompetitors(data) {
   const events = data?.events;
   if (!events || !events.length) return [];
@@ -30,38 +39,33 @@ function parseCompetitors(data) {
     const rawName = c.athlete?.displayName || 'Unknown';
     const name = normalizeName(rawName);
 
-    // score.value is total strokes to par (signed int). If missing, compute from linescores.
-    let totalToPar = null;
-    if (c.score != null && c.score.value != null) {
-      totalToPar = Number(c.score.value);
-    }
+    // score.displayValue is the reliable to-par string: "-8", "E", "+4"
+    // score.value may be total strokes (e.g. 136) so we avoid it
+    let totalToPar = parseToParString(c.score?.displayValue);
 
     // linescores: .value is either stroke total (completed round, e.g. 68)
     // or already to-par (in-progress round, e.g. -3). Heuristic: >50 = strokes.
-    const linescores = c.linescores || [];
-    const rounds = linescores.map((ls) => {
+    const rounds = (c.linescores || []).map((ls) => {
       if (ls.value == null) return null;
       const v = Number(ls.value);
       return v > 50 ? v - 72 : v;
     });
 
-    // If totalToPar is still null, sum rounds
+    // Fallback: derive total from sum of round scores
     if (totalToPar === null && rounds.length > 0) {
       totalToPar = rounds.reduce((sum, r) => (r != null ? sum + r : sum), 0);
     }
 
-    // thru and status
-    const thru = c.status?.thru != null ? c.status.thru : null;
+    const thru = c.status?.thru ?? null;
     const displayValue = c.status?.displayValue || '';
-    const isCut = displayValue.toUpperCase().includes('CUT') || displayValue.toUpperCase() === 'WD' || displayValue.toUpperCase() === 'DQ';
-
-    // Position
-    const position = c.status?.position?.displayName || c.statistics?.find(s => s.name === 'position')?.displayValue || '';
+    const dv = displayValue.toUpperCase();
+    const isCut = dv.includes('CUT') || dv === 'WD' || dv === 'DQ';
+    const position = c.status?.position?.displayName || '';
 
     return {
       name,
-      totalToPar: totalToPar !== null ? totalToPar : 0,
-      rounds,  // array of to-par scores per round
+      totalToPar: totalToPar ?? 0,
+      rounds,
       thru,
       displayValue,
       isCut,

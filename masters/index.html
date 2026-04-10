@@ -412,6 +412,15 @@ function normalizeName(name) {
   return NAME_MAP[name] || name;
 }
 
+// Parse ESPN's score displayValue string: "E" → 0, "-8" → -8, "+4" → 4
+function parseToParString(str) {
+  if (str == null) return null;
+  const s = String(str).trim().toUpperCase();
+  if (s === 'E' || s === 'EVEN') return 0;
+  const n = parseFloat(s.replace('+', ''));
+  return isNaN(n) ? null : n;
+}
+
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let playerData = {};
 let lastFetched = null;
@@ -427,11 +436,9 @@ function parseESPN(data) {
     const rawName = c.athlete?.displayName || 'Unknown';
     const name = normalizeName(rawName);
 
-    // score.value = total to par (signed integer, e.g. -10 for 10 under)
-    let totalToPar = null;
-    if (c.score != null && c.score.value != null) {
-      totalToPar = Number(c.score.value);
-    }
+    // score.displayValue is the reliable to-par string: "-8", "E", "+4"
+    // score.value may be total strokes (e.g. 136) so we avoid it
+    let totalToPar = parseToParString(c.score?.displayValue);
 
     // linescores: .value is either stroke total (completed round, e.g. 68)
     // or already to-par (in-progress round, e.g. -3). Heuristic: >50 = strokes.
@@ -441,6 +448,7 @@ function parseESPN(data) {
       return v > 50 ? v - 72 : v;
     });
 
+    // Fallback: derive total from sum of round scores
     if (totalToPar === null && rounds.length > 0) {
       totalToPar = rounds.reduce((s, r) => (r != null ? s + r : s), 0);
     }
