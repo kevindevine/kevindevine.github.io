@@ -433,10 +433,12 @@ function parseESPN(data) {
       totalToPar = Number(c.score.value);
     }
 
-    // linescores: stroke totals per round → convert to to-par (par 72)
+    // linescores: .value is either stroke total (completed round, e.g. 68)
+    // or already to-par (in-progress round, e.g. -3). Heuristic: >50 = strokes.
     const rounds = (c.linescores || []).map(ls => {
-      const strokes = ls.value != null ? Number(ls.value) : null;
-      return strokes != null ? strokes - 72 : null;
+      if (ls.value == null) return null;
+      const v = Number(ls.value);
+      return v > 50 ? v - 72 : v;
     });
 
     if (totalToPar === null && rounds.length > 0) {
@@ -574,6 +576,14 @@ function renderFantasy() {
                 <div class="thru-val">${thruStr}</div>
               </div>`;
           }).join('')}
+          ${(() => {
+            const tf = fmtScore(entry.total, false);
+            return `<div class="pick-row" style="background:#f0ede6;border-top:2px solid var(--light-gray)">
+              <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray)">Combined Total</div>
+              <div class="score-val ${tf.cls}" style="text-align:right;font-size:0.95rem">${tf.text}</div>
+              <div></div><div></div><div></div>
+            </div>`;
+          })()}
         </div>
       </div>`;
   });

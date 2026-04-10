@@ -36,12 +36,13 @@ function parseCompetitors(data) {
       totalToPar = Number(c.score.value);
     }
 
-    // linescores: each entry has a .value (round stroke total)
+    // linescores: .value is either stroke total (completed round, e.g. 68)
+    // or already to-par (in-progress round, e.g. -3). Heuristic: >50 = strokes.
     const linescores = c.linescores || [];
     const rounds = linescores.map((ls) => {
-      const strokes = ls.value != null ? Number(ls.value) : null;
-      // Convert strokes to score to par (par 72)
-      return strokes != null ? strokes - 72 : null;
+      if (ls.value == null) return null;
+      const v = Number(ls.value);
+      return v > 50 ? v - 72 : v;
     });
 
     // If totalToPar is still null, sum rounds
