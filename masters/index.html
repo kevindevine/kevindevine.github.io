@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Madden's Masters</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #1a4731;
+      --gold: #f0c040;
+      --bg: #f7f5f0;
+      --card: #ffffff;
+      --red: #cc2200;
+      --black: #111111;
+      --gray: #888888;
+      --light-gray: #e8e4dc;
+      --font: 'Libre Baskerville', Georgia, serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    header {
+      background: var(--green);
+      color: #fff;
+      text-align: center;
+      padding: 20px 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    header p.subtitle {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    .gold-stripe {
+      height: 4px;
+      background: var(--gold);
+      margin-top: 14px;
+    }
+
+    /* ── TABS ───────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      background: var(--green);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-family: var(--font);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    /* ── META BAR ───────────────────────────────────── */
+    .meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      font-size: 0.68rem;
+      color: var(--gray);
+      background: var(--bg);
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    .refresh-btn {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      font-family: var(--font);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .refresh-btn:hover { opacity: 0.85; }
+    .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── MAIN CONTENT ───────────────────────────────── */
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 12px 12px 40px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── SECTION HEADER ─────────────────────────────── */
+    .section-header {
+      display: grid;
+      grid-template-columns: 28px 1fr 60px 40px 40px 36px;
+      gap: 4px;
+      padding: 6px 10px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gray);
+      border-bottom: 1px solid var(--light-gray);
+      margin-bottom: 6px;
+    }
+
+    /* ── FANTASY CARDS ──────────────────────────────── */
+    .entry-card {
+      background: var(--card);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+
+    .entry-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.14); }
+
+    .entry-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 60px 20px;
+      gap: 4px;
+      align-items: center;
+      padding: 12px 10px;
+    }
+
+    .entry-rank {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--gray);
+      text-align: center;
+    }
+
+    .entry-rank.top1 { color: #b8860b; }
+    .entry-rank.top3 { color: #555; }
+
+    .entry-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .entry-total {
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .chevron {
+      font-size: 0.7rem;
+      color: var(--gray);
+      text-align: right;
+      transition: transform 0.2s;
+    }
+
+    .entry-card.expanded .chevron { transform: rotate(180deg); }
+
+    /* ── PICKS EXPANSION ─────────────────────────────── */
+    .picks-panel {
+      display: none;
+      border-top: 1px solid var(--light-gray);
+      background: #faf9f6;
+    }
+
+    .entry-card.expanded .picks-panel { display: block; }
+
+    .picks-header {
+      display: grid;
+      grid-template-columns: 1fr 52px 38px 38px 34px;
+      gap: 4px;
+      padding: 5px 10px 4px;
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gray);
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    .pick-row {
+      display: grid;
+      grid-template-columns: 1fr 52px 38px 38px 34px;
+      gap: 4px;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    .pick-row:last-child { border-bottom: none; }
+
+    .pick-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pick-name.cut {
+      color: var(--gray);
+      text-decoration: line-through;
+    }
+
+    .cut-badge {
+      display: inline-block;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--gray);
+      border-radius: 2px;
+      padding: 1px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .score-val {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .score-val.under { color: var(--red); }
+    .score-val.over  { color: var(--black); }
+    .score-val.even  { color: var(--black); }
+    .score-val.cut   { color: var(--gray); }
+
+    /* ── PLAYERS TAB ─────────────────────────────────── */
+    .player-card {
+      background: var(--card);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 60px 40px 40px 36px;
+      gap: 4px;
+      align-items: center;
+      padding: 10px 10px;
+    }
+
+    .player-pos {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--gray);
+      text-align: center;
+    }
+
+    .player-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .player-name.cut {
+      color: var(--gray);
+      text-decoration: line-through;
+    }
+
+    .player-total {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .round-score {
+      font-size: 0.75rem;
+      text-align: center;
+      color: var(--gray);
+    }
+
+    .thru-val {
+      font-size: 0.68rem;
+      text-align: right;
+      color: var(--gray);
+      white-space: nowrap;
+    }
+
+    /* ── SCORE COLORS ────────────────────────────────── */
+    .under { color: var(--red); }
+    .over  { color: var(--black); }
+    .even  { color: var(--black); }
+
+    /* ── LOADING / ERROR ─────────────────────────────── */
+    .loading-msg, .error-msg {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    .error-msg { color: var(--red); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--light-gray);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Madden's Masters</h1>
+  <p class="subtitle">Masters Tournament 2026 &bull; Fantasy Leaderboard</p>
+  <div class="gold-stripe"></div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="fantasy">Fantasy</button>
+    <button class="tab-btn" data-tab="players">Players</button>
+  </div>
+</header>
+
+<div class="meta-bar">
+  <span id="last-updated">Loading scores…</span>
+  <button class="refresh-btn" id="refresh-btn">&#8635; Refresh</button>
+</div>
+
+<main>
+  <div class="tab-panel active" id="tab-fantasy">
+    <div class="loading-msg"><span class="spinner"></span>Fetching scores…</div>
+  </div>
+  <div class="tab-panel" id="tab-players">
+    <div class="loading-msg"><span class="spinner"></span>Fetching scores…</div>
+  </div>
+</main>
+
+<script>
+// ── FANTASY ENTRIES ──────────────────────────────────────────────────────────
+const ENTRIES = [
+  { name: 'C Hennelly',     picks: ['Xander Schauffele', 'Cameron Young', 'Si Woo Kim'] },
+  { name: 'Murph',          picks: ['Bryson DeChambeau', 'Jon Rahm', 'JJ Spaun'] },
+  { name: 'Madden',         picks: ['Cameron Young', 'Collin Morikawa', 'Si Woo Kim'] },
+  { name: 'Francis',        picks: ['Jon Rahm', 'Hideki Matsuyama', 'Corey Conners'] },
+  { name: 'Davy',           picks: ['Jon Rahm', 'Matt Fitzpatrick', 'Sam Burns'] },
+  { name: 'Bod',            picks: ['Collin Morikawa', 'Tommy Fleetwood', 'Shane Lowry'] },
+  { name: 'Farrelly',       picks: ['Scottie Scheffler', 'Ludvig Åberg', 'Jacob Bridgeman'] },
+  { name: 'BOC',            picks: ['Rory McIlroy', 'Jon Rahm', 'JJ Spaun'] },
+  { name: 'The RODfather',  picks: ['Bryson DeChambeau', 'Scottie Scheffler', 'Cameron Smith'] },
+  { name: 'Coogs',          picks: ['Collin Morikawa', 'Matt Fitzpatrick', 'Chris Gotterup'] },
+  { name: 'Joe G',          picks: ['Hideki Matsuyama', 'Robert MacIntyre', 'Justin Rose'] },
+  { name: 'JD',             picks: ['Scottie Scheffler', 'Ludvig Åberg', 'Will Zalatoris'] },
+  { name: 'Kev',            picks: ['Rory McIlroy', 'Maverick McNealy', 'Shane Lowry'] },
+  { name: 'Lydon',          picks: ['Xander Schauffele', 'Rory McIlroy', 'Will Zalatoris'] },
+  { name: 'Johnny G (006)', picks: ['Scottie Scheffler', 'Patrick Cantlay', 'Viktor Hovland'] },
+];
+
+const ALL_PICKED_PLAYERS = [...new Set(ENTRIES.flatMap(e => e.picks))];
+
+// ── ESPN NAME NORMALIZATION ───────────────────────────────────────────────────
+const NAME_MAP = {
+  'J.J. Spaun':          'JJ Spaun',
+  'Matthew Fitzpatrick':  'Matt Fitzpatrick',
+  'Ludvig Aberg':         'Ludvig Åberg',
+  'Robert MacIntyre':     'Robert MacIntyre',
+};
+
+function normalizeName(name) {
+  return NAME_MAP[name] || name;
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let playerData = {};
+let lastFetched = null;
+let refreshInterval = null;
+
+// ── ESPN API ──────────────────────────────────────────────────────────────────
+const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401811941';
+
+function parseESPN(data) {
+  const competitors = data?.events?.[0]?.competitions?.[0]?.competitors || [];
+
+  return competitors.map(c => {
+    const rawName = c.athlete?.displayName || 'Unknown';
+    const name = normalizeName(rawName);
+
+    // score.value = total to par (signed integer, e.g. -10 for 10 under)
+    let totalToPar = null;
+    if (c.score != null && c.score.value != null) {
+      totalToPar = Number(c.score.value);
+    }
+
+    // linescores: stroke totals per round → convert to to-par (par 72)
+    const rounds = (c.linescores || []).map(ls => {
+      const strokes = ls.value != null ? Number(ls.value) : null;
+      return strokes != null ? strokes - 72 : null;
+    });
+
+    if (totalToPar === null && rounds.length > 0) {
+      totalToPar = rounds.reduce((s, r) => (r != null ? s + r : s), 0);
+    }
+
+    const thru = c.status?.thru ?? null;
+    const displayValue = c.status?.displayValue || '';
+    const dv = displayValue.toUpperCase();
+    const isCut = dv.includes('CUT') || dv === 'WD' || dv === 'DQ';
+
+    return { name, totalToPar: totalToPar ?? 0, rounds, thru, displayValue, isCut };
+  });
+}
+
+// ── SCORE FORMATTING ─────────────────────────────────────────────────────────
+function fmtScore(val, isCut) {
+  if (isCut) return { text: 'CUT', cls: 'cut' };
+  if (val == null || isNaN(val)) return { text: '—', cls: 'even' };
+  if (val === 0) return { text: 'E', cls: 'even' };
+  if (val < 0)  return { text: String(val), cls: 'under' };
+  return { text: '+' + val, cls: 'over' };
+}
+
+function fmtRound(val) {
+  if (val == null || isNaN(val)) return '—';
+  if (val === 0) return 'E';
+  return val < 0 ? String(val) : '+' + val;
+}
+
+function fmtThru(thru, displayValue) {
+  const dv = (displayValue || '').toUpperCase();
+  if (dv === 'F' || dv === 'FINAL') return 'F';
+  if (dv.includes('CUT') || dv === 'WD' || dv === 'DQ') return dv;
+  if (thru != null) return thru === 18 ? 'F' : `T${thru}`;
+  return displayValue || '—';
+}
+
+// ── DATA FETCH ────────────────────────────────────────────────────────────────
+async function fetchScores() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(ESPN_URL);
+    if (!res.ok) throw new Error(`ESPN ${res.status}`);
+    const data = await res.json();
+
+    playerData = {};
+    parseESPN(data).forEach(p => { playerData[p.name] = p; });
+
+    lastFetched = new Date();
+    renderAll();
+    updateMeta();
+  } catch (err) {
+    console.error('Fetch error:', err);
+    document.getElementById('last-updated').textContent = 'Error fetching scores';
+    if (!Object.keys(playerData).length) showError();
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function showError() {
+  const msg = '<div class="error-msg">Could not load scores — check your connection and try again.</div>';
+  document.getElementById('tab-fantasy').innerHTML = msg;
+  document.getElementById('tab-players').innerHTML = msg;
+}
+
+function updateMeta() {
+  if (!lastFetched) return;
+  const t = lastFetched.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('last-updated').textContent = `Last updated: ${t}`;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getPlayer(name) {
+  return playerData[name] || { totalToPar: 0, rounds: [], thru: null, displayValue: '', isCut: false };
+}
+
+function entryTotal(entry) {
+  return entry.picks.reduce((s, p) => s + (getPlayer(p).totalToPar || 0), 0);
+}
+
+// ── FANTASY TAB ───────────────────────────────────────────────────────────────
+function renderFantasy() {
+  const container = document.getElementById('tab-fantasy');
+
+  const sorted = ENTRIES
+    .map(e => ({ ...e, total: entryTotal(e) }))
+    .sort((a, b) => a.total - b.total);
+
+  let rank = 1;
+  sorted.forEach((e, i) => {
+    if (i > 0 && e.total !== sorted[i - 1].total) rank = i + 1;
+    e.rank = rank;
+  });
+
+  let html = '';
+
+  sorted.forEach(entry => {
+    const tf = fmtScore(entry.total, false);
+    const rankCls = entry.rank === 1 ? 'top1' : entry.rank <= 3 ? 'top3' : '';
+
+    html += `
+      <div class="entry-card" data-entry="${entry.name}">
+        <div class="entry-row">
+          <div class="entry-rank ${rankCls}">${entry.rank}</div>
+          <div class="entry-name">${entry.name}</div>
+          <div class="entry-total ${tf.cls}">${tf.text}</div>
+          <div class="chevron">&#9660;</div>
+        </div>
+        <div class="picks-panel">
+          <div class="picks-header">
+            <div>Player</div>
+            <div style="text-align:right">Total</div>
+            <div style="text-align:center">R1</div>
+            <div style="text-align:center">R2</div>
+            <div style="text-align:right">Thru</div>
+          </div>
+          ${entry.picks.map(pick => {
+            const p = getPlayer(pick);
+            const pf = fmtScore(p.totalToPar, p.isCut);
+            const r1 = p.rounds[0] != null ? fmtRound(p.rounds[0]) : '—';
+            const r2 = p.rounds[1] != null ? fmtRound(p.rounds[1]) : '—';
+            const thruStr = fmtThru(p.thru, p.displayValue);
+            const nameCls = p.isCut ? 'pick-name cut' : 'pick-name';
+            const badge = p.isCut ? '<span class="cut-badge">CUT</span>' : '';
+            return `
+              <div class="pick-row">
+                <div class="${nameCls}">${pick}${badge}</div>
+                <div class="score-val ${pf.cls}" style="text-align:right">${pf.text}</div>
+                <div class="score-val" style="text-align:center;color:var(--gray);font-weight:400">${r1}</div>
+                <div class="score-val" style="text-align:center;color:var(--gray);font-weight:400">${r2}</div>
+                <div class="thru-val">${thruStr}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  container.querySelectorAll('.entry-card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('expanded'));
+  });
+}
+
+// ── PLAYERS TAB ───────────────────────────────────────────────────────────────
+function renderPlayers() {
+  const container = document.getElementById('tab-players');
+
+  const players = ALL_PICKED_PLAYERS.map(name => ({ name, ...getPlayer(name) }));
+  players.sort((a, b) => {
+    if (a.isCut && !b.isCut) return 1;
+    if (!a.isCut && b.isCut) return -1;
+    return a.totalToPar - b.totalToPar;
+  });
+
+  // Assign display ranks
+  let rank = 1, prevTotal = null, tieCount = 0;
+  players.forEach((p, i) => {
+    if (p.isCut) { p.displayRank = 'CUT'; return; }
+    if (prevTotal !== null && p.totalToPar === prevTotal) {
+      tieCount++;
+      p.displayRank = rank;
+    } else {
+      rank = i + 1 - tieCount;
+      p.displayRank = rank;
+      tieCount = 0;
+    }
+    prevTotal = p.totalToPar;
+  });
+
+  let html = `
+    <div class="section-header">
+      <div style="text-align:center">Pos</div>
+      <div>Player</div>
+      <div style="text-align:right">Total</div>
+      <div style="text-align:center">R1</div>
+      <div style="text-align:center">R2</div>
+      <div style="text-align:right">Thru</div>
+    </div>`;
+
+  players.forEach(p => {
+    const tf = fmtScore(p.totalToPar, p.isCut);
+    const r1 = p.rounds[0] != null ? fmtRound(p.rounds[0]) : '—';
+    const r2 = p.rounds[1] != null ? fmtRound(p.rounds[1]) : '—';
+    const thruStr = fmtThru(p.thru, p.displayValue);
+    const nameCls = p.isCut ? 'player-name cut' : 'player-name';
+
+    html += `
+      <div class="player-card">
+        <div class="player-row">
+          <div class="player-pos">${p.displayRank || '—'}</div>
+          <div class="${nameCls}">${p.name}</div>
+          <div class="player-total ${tf.cls}">${tf.text}</div>
+          <div class="round-score">${r1}</div>
+          <div class="round-score">${r2}</div>
+          <div class="thru-val">${thruStr}</div>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderAll() {
+  renderFantasy();
+  renderPlayers();
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('refresh-btn').addEventListener('click', fetchScores);
+
+// Auto-refresh every 60 seconds
+refreshInterval = setInterval(fetchScores, 60_000);
+
+fetchScores();
+</script>
+</body>
+</html>
