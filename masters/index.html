@@ -527,8 +527,22 @@ function getPlayer(name) {
   return playerData[name] || { totalToPar: 0, rounds: [], thru: null, displayValue: '', isCut: false };
 }
 
+// Worst score among players who made the cut (from the full ESPN field).
+// Used as the penalty score for any picked player who missed the cut.
+function getCutLineScore() {
+  const active = Object.values(playerData).filter(p => !p.isCut);
+  if (!active.length) return 0;
+  return Math.max(...active.map(p => p.totalToPar));
+}
+
+function effectiveScore(pick) {
+  const p = getPlayer(pick);
+  if (p.isCut) return getCutLineScore();
+  return p.totalToPar;
+}
+
 function entryTotal(entry) {
-  return entry.picks.reduce((s, p) => s + (getPlayer(p).totalToPar || 0), 0);
+  return entry.picks.reduce((s, pick) => s + effectiveScore(pick), 0);
 }
 
 // ── FANTASY TAB ───────────────────────────────────────────────────────────────
@@ -567,23 +581,29 @@ function renderFantasy() {
             <div style="text-align:center">R2</div>
             <div style="text-align:right">Thru</div>
           </div>
-          ${entry.picks.map(pick => {
-            const p = getPlayer(pick);
-            const pf = fmtScore(p.totalToPar, p.isCut);
-            const r1 = p.rounds[0] != null ? fmtRound(p.rounds[0]) : '—';
-            const r2 = p.rounds[1] != null ? fmtRound(p.rounds[1]) : '—';
-            const thruStr = fmtThru(p.thru, p.displayValue);
-            const nameCls = p.isCut ? 'pick-name cut' : 'pick-name';
-            const badge = p.isCut ? '<span class="cut-badge">CUT</span>' : '';
-            return `
-              <div class="pick-row">
-                <div class="${nameCls}">${pick}${badge}</div>
-                <div class="score-val ${pf.cls}" style="text-align:right">${pf.text}</div>
-                <div class="score-val" style="text-align:center;color:var(--gray);font-weight:400">${r1}</div>
-                <div class="score-val" style="text-align:center;color:var(--gray);font-weight:400">${r2}</div>
-                <div class="thru-val">${thruStr}</div>
-              </div>`;
-          }).join('')}
+          ${(() => {
+            const cutScore = getCutLineScore();
+            return entry.picks.map(pick => {
+              const p = getPlayer(pick);
+              const scored = p.isCut ? cutScore : p.totalToPar;
+              const pf = fmtScore(scored, false);
+              const r1 = p.rounds[0] != null ? fmtRound(p.rounds[0]) : '—';
+              const r2 = p.rounds[1] != null ? fmtRound(p.rounds[1]) : '—';
+              const thruStr = fmtThru(p.thru, p.displayValue);
+              const nameCls = p.isCut ? 'pick-name cut' : 'pick-name';
+              const badge = p.isCut
+                ? `<span class="cut-badge">CUT</span><span style="font-size:0.55rem;color:var(--gray);font-style:italic;margin-left:4px">(${pf.text} applied)</span>`
+                : '';
+              return `
+                <div class="pick-row">
+                  <div class="${nameCls}">${pick}${badge}</div>
+                  <div class="score-val ${pf.cls}" style="text-align:right">${pf.text}</div>
+                  <div class="score-val" style="text-align:center;color:var(--gray);font-weight:400">${r1}</div>
+                  <div class="score-val" style="text-align:center;color:var(--gray);font-weight:400">${r2}</div>
+                  <div class="thru-val">${thruStr}</div>
+                </div>`;
+            }).join('');
+          })()}
           ${(() => {
             const tf = fmtScore(entry.total, false);
             return `<div class="pick-row" style="background:#f0ede6;border-top:2px solid var(--light-gray)">
