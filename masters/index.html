@@ -421,6 +421,45 @@ function parseToParString(str) {
   return isNaN(n) ? null : n;
 }
 
+// Prefer each round's displayValue (to par). During R3/R4, score.displayValue can lag at 36 holes.
+function roundToParFromLinescore(ls) {
+  if (!ls) return null;
+  const dv = ls.displayValue;
+  if (dv != null && dv !== '' && dv !== '-' && dv !== '—') {
+    const fromDv = parseToParString(dv);
+    if (fromDv != null) return fromDv;
+  }
+  if (ls.value == null) return null;
+  const v = Number(ls.value);
+  if (v === 0) return null;
+  return v > 50 ? v - 72 : v;
+}
+
+function computeTotalToPar(c) {
+  const lines = c.linescores || [];
+  let sum = 0;
+  let any = false;
+  for (const ls of lines) {
+    const p = roundToParFromLinescore(ls);
+    if (p != null) {
+      sum += p;
+      any = true;
+    }
+  }
+  if (any) return sum;
+
+  let total = parseToParString(c.score?.displayValue);
+  const roundsFallback = lines.map((ls) => {
+    if (ls.value == null) return null;
+    const v = Number(ls.value);
+    return v > 50 ? v - 72 : v;
+  });
+  if (total === null && roundsFallback.length > 0) {
+    total = roundsFallback.reduce((s, r) => (r != null ? s + r : s), 0);
+  }
+  return total;
+}
+
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let playerData = {};
 let lastFetched = null;
@@ -436,29 +475,15 @@ function parseESPN(data) {
     const rawName = c.athlete?.displayName || 'Unknown';
     const name = normalizeName(rawName);
 
-    // score.displayValue is the reliable to-par string: "-8", "E", "+4"
-    // score.value may be total strokes (e.g. 136) so we avoid it
-    let totalToPar = parseToParString(c.score?.displayValue);
-
-    // linescores: .value is either stroke total (completed round, e.g. 68)
-    // or already to-par (in-progress round, e.g. -3). Heuristic: >50 = strokes.
-    const rounds = (c.linescores || []).map(ls => {
-      if (ls.value == null) return null;
-      const v = Number(ls.value);
-      return v > 50 ? v - 72 : v;
-    });
-
-    // Fallback: derive total from sum of round scores
-    if (totalToPar === null && rounds.length > 0) {
-      totalToPar = rounds.reduce((s, r) => (r != null ? s + r : s), 0);
-    }
+    const totalToPar = computeTotalToPar(c);
+    const rounds = (c.linescores || []).map(ls => roundToParFromLinescore(ls));
 
     const thru = c.status?.thru ?? null;
     const displayValue = c.status?.displayValue || '';
     const dv = displayValue.toUpperCase();
     const isCut = dv.includes('CUT') || dv === 'WD' || dv === 'DQ';
 
-    return { name, totalToPar: totalToPar ?? 0, rounds, thru, displayValue, isCut };
+    return { name, totalToPar: totalToPar == null ? 0 : totalToPar, rounds, thru, displayValue, isCut };
   });
 }
 
